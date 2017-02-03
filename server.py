@@ -1,9 +1,6 @@
 from websocket_server import WebsocketServer
 import json
 
-users = []
-
-
 # Called for every client connecting (after handshake)
 def new_client(client, server):
     print("New client connected and was given id %d" % client['id'])
@@ -30,7 +27,6 @@ def message_received(client, server, message):
             'username': str(msg['user']),
             'room': str(msg['room'])
         }
-        users.append(new_user)
 
         outgoing_socket_message = {
             'action': "USER_IN",
@@ -41,15 +37,27 @@ def message_received(client, server, message):
         print "avisando outros: %s" % json.dumps(outgoing_socket_message)
         server.send_message_to_all(json.dumps(outgoing_socket_message))
 
+
+
     elif incoming_action == "SIGN_OUT":
-        print "<<sign-out>>"
+
+        outgoing_socket_message = {
+            'action': "USER_OUT",
+            'message': "",
+            'room': msg['room'],
+            'user': msg['user']
+        }
+
+        server.send_message_to_all(json.dumps(outgoing_socket_message))
+        client_left(client, server)
+
+        print json.dumps(outgoing_socket_message)
 
     elif incoming_action == "REQUEST_USERS":
-        _users = filter(lambda user: user['room'] == msg['room'], users)
-        _usernames = map(lambda user: user['username'], _users)
+
         outgoing_socket_message = {
             'action': "ALL_USERS",
-            'message': ','.join(_usernames),
+            'message': 'user1,user2,user3',
             'room': "",
             'user': ""
         }
